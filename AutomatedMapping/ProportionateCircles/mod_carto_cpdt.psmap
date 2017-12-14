@@ -1,0 +1,62 @@
+paper 
+ height  8.268
+ width 11.693
+ left 0.1
+ right 0.1
+ bottom 0.1
+ top 0.1
+end
+scalebar f
+  length 30000
+  height 0.05
+  scaleunits 1000
+  unitslabel kilomètres
+  segment 2
+  where 7 7.9
+  fontsize 8
+end
+vareas com
+  where comcod=21000
+  width 1
+  fcolor none
+end
+vareas wallonie
+  width 1
+  fcolor none
+end
+text 156000 205000 Flandre
+   ref left center
+end
+text 250000 180000 Pays Bas
+   ref left center
+end
+text 290000 153902 Allemagne
+   ref left center
+end
+text 270000 68718 Luxembourg
+   ref left center
+end
+text 110000 87000 France
+   ref left center
+end
+rectangle 5% 48% 22% 20%
+   fcolor none
+   color black
+   width 0.5
+end
+text 6% 45% Revenus nets du travail\n(en millions d'Euros):
+   ref left center
+   fontsize 11
+end
+text 2% 2% Sources de données : SPF Economie, ONSS, INASTI, ONSSAPL (2001)
+   ref left center
+   fontsize 9
+end
+text 78% 4% Traitements et carte : ULB-IGEAT
+   ref left center
+   fontsize 9
+end
+text 78% 2% Réalisé avec le SIG libre GRASS
+   ref left center
+   fontsize 9
+end

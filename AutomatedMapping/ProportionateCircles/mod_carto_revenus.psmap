@@ -1,0 +1,39 @@
+vpoints com
+   type centroid
+   symbol basic/circle
+   sizecolumn sqrt(revenus)
+   scale SCALE
+   fcolor red
+   width 0.1
+end
+vareas com
+   fcolor none
+   width 0.1
+end
+vpoints belscale
+   type point
+   symbol basic/circle
+   sizecolumn sqrt(valeur)
+   scale SCALE
+   fcolor red
+   width 0.1
+end
+text 20% 38% LEG1
+  fontsize 8
+  ref right center
+end
+text 20% 29% LEG2
+  fontsize 8
+  ref right center
+end
+text 20% 23% LEG3
+  fontsize 8
+  ref right center
+end
+text 15% 98% TITRE
+   fontsize 14
+   width 4
+   ref left center
+end
+read mod_carto_cpdt.psmap
+
