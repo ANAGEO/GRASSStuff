@@ -13,7 +13,6 @@ MEMORY=2000
 
 echo "Identifying edges..."
 eval $(g.region -g save=current --o)
-#i.zc $RASTMAP out=edge_tmp width=$ZC_WIDTH thresh=$ZC_THRESH --o --q
 i.edge $RASTMAP out=edge_tmp lthresh=$CANNY_LOWTHRES hthresh=$CANNY_HITHRESH sigma=$CANNY_SIGMA --o --q
 
 echo "Calulating horizontal paths..."

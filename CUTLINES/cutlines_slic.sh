@@ -67,7 +67,7 @@ v.centroids tmp3 out=tmp4 --o --q
 v.clean tmp4 tool=rmarea thresh=$MINTILESIZE out=$OUTPUTVECTORPOLYS --o --q
 
 echo "Cleaning up..."
-#g.remove type=rast,vect name=base,hstart,vstart,hstop,vstop,hdrainstart,vdrainstart,hcumcost,vcumcost,hdir,vdir,hlines,vlines,edge_tmp,hbase,hborderlines,vbase,vborderlines,hborderlines_tmp,vborderlines,region,raster_polygons,raster_polygons_tmp,vborderlines_tmp,hborderlines,tmp1,tmp2,tmp3,tmp4,tmp_superp,slic_tmp,slic_tmp_cat -f --q
+g.remove type=rast,vect name=base,hstart,vstart,hstop,vstop,hdrainstart,vdrainstart,hcumcost,vcumcost,hdir,vdir,hlines,vlines,edge_tmp,hbase,hborderlines,vbase,vborderlines,hborderlines_tmp,vborderlines,region,raster_polygons,raster_polygons_tmp,vborderlines_tmp,hborderlines,tmp1,tmp2,tmp3,tmp4,tmp_superp,slic_tmp,slic_tmp_cat -f --q
 rm hstartpoints hstoppoints vstartpoints vstoppoints
 
 
