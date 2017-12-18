@@ -1,19 +1,25 @@
 RASTMAP=ortho_2001_t792_1m
-CANNY_LOWTHRES=1
-CANNY_HITHRESH=5
-CANNY_SIGMA=2
+SLIC_NUMPIXELS=200
+SLIC_STEP=0
+SLIC_PERTURB=0
+SLIC_COMPACTNESS=1
+SLIC_MINSIZE=50
 NUMBERLINES=20
 EDGEWEIGHT=5
 BORDERLINERESISTANCE=9999
-OUTPUTRASTER=cutlines_canny
-OUTPUTVECTORLINES=cutlines_canny
-OUTPUTVECTORPOLYS=cutpolygons_canny
+OUTPUTRASTER=cutlines_slic
+OUTPUTVECTORLINES=cutlines_slic
+OUTPUTVECTORPOLYS=cutpolygons_slic
 MINTILESIZE=40000
 MEMORY=2000
 
 echo "Identifying edges..."
 eval $(g.region -g save=current --o)
-i.edge $RASTMAP out=edge_tmp lthresh=$CANNY_LOWTHRES hthresh=$CANNY_HITHRESH sigma=$CANNY_SIGMA --o --q
+i.superpixels.slic $RASTMAP out=slic_tmp num_pixels=$SLIC_NUMPIXELS step=$SLIC_STEP perturb=$SLIC_PERTURB compactness=$SLIC_COMPACTNESS minsize=$SLIC_MINSIZE --o --q
+r.to.vect -t -v slic_tmp out=slic_tmp type=area --o --q
+v.category slic_tmp type=boundary layer=2 op=add output=slic_tmp_cat --o --q
+v.to.rast slic_tmp_cat type=boundary layer=2 out=edge_tmp use=val --o --q
+r.null edge_tmp null=0
 
 echo "Calulating horizontal paths..."
 NSSTEP=$(python -c "print 1.0*($n-$s-$nsres)/$NUMBERLINES")
@@ -61,7 +67,7 @@ v.centroids tmp3 out=tmp4 --o --q
 v.clean tmp4 tool=rmarea thresh=$MINTILESIZE out=$OUTPUTVECTORPOLYS --o --q
 
 echo "Cleaning up..."
-g.remove type=rast,vect name=base,hstart,vstart,hstop,vstop,hdrainstart,vdrainstart,hcumcost,vcumcost,hdir,vdir,hlines,vlines,edge_tmp,hbase,hborderlines,vbase,vborderlines,hborderlines_tmp,vborderlines,region,raster_polygons,raster_polygons_tmp,vborderlines_tmp,hborderlines,tmp1,tmp2,tmp3,tmp4,tmp_superp -f --q
+g.remove type=rast,vect name=base,hstart,vstart,hstop,vstop,hdrainstart,vdrainstart,hcumcost,vcumcost,hdir,vdir,hlines,vlines,edge_tmp,hbase,hborderlines,vbase,vborderlines,hborderlines_tmp,vborderlines,region,raster_polygons,raster_polygons_tmp,vborderlines_tmp,hborderlines,tmp1,tmp2,tmp3,tmp4,tmp_superp,slic_tmp,slic_tmp_cat -f --q
 rm hstartpoints hstoppoints vstartpoints vstoppoints
 
 
