@@ -13,7 +13,14 @@ from multiprocessing import Pool
 from functools import partial   
 
 def create_binary_raster(categorical_raster,prefix="binary",setnull=False,returnlistraster=True,category_list=None,ncores=2):
-    # Check for number of cores doesnt exceed available
+	# Check if raster exists to avoid error in mutliprocessing 
+    try:
+        mpset=categorical_raster.split("@")[1]
+    except:
+        mpset=""
+    if categorical_raster not in gscript.list_strings(type='raster',mapset=mpset):
+        sys.exit('Raster <%s> not found' %categorical_raster)
+	# Check for number of cores doesnt exceed available
     nbcpu=multiprocessing.cpu_count()
     if ncores>=nbcpu:
         ncores=nbcpu-1
