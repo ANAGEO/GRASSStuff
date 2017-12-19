@@ -10,4 +10,4 @@ This function creates a binary raster for each category of a base raster. The fu
 - 'category_list' wait for a list of interger corresponding to specific category of the base raster to be used 
 
 #### TODOs:
-- Create a multiprocessed version as it could take long time if the computational region is very large
+- DONE : Create a multiprocessed version as it could take long time if the computational region is very large
