@@ -12,42 +12,15 @@ from multiprocessing import Pool
 from functools import partial   
 
 def compute_landscapelevel_metrics(configfile, raster, spatial_metric):
-    if spatial_metric=='dominance':
-        filename=raster.split("@")[0]+"_dominance"
-        gscript.run_command('r.li.dominance', overwrite=True,
-                            input=raster,config=configfile,output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
-    if spatial_metric=='pielou':
-        filename=raster.split("@")[0]+"_pielou"
-        gscript.run_command('r.li.pielou', overwrite=True,
-                            input=raster,config=configfile,output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
+    filename=raster.split("@")[0]+"_%s" %spatial_metric
+    outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
     if spatial_metric=='renyi': # The alpha parameter was set to 2 as in https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy
-        filename=raster.split("@")[0]+"_renyi"
-        gscript.run_command('r.li.renyi', overwrite=True,
+        gscript.run_command('r.li.%s' %spatial_metric, overwrite=True,
                             input=raster,config=configfile,alpha='2', output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
-    if spatial_metric=='richness':
-        filename=raster.split("@")[0]+"_richness"
-        gscript.run_command('r.li.richness', overwrite=True,
-                            input=raster,config=configfile,output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
-    if spatial_metric=='shannon':
-        filename=raster.split("@")[0]+"_shannon"
-        gscript.run_command('r.li.shannon', overwrite=True,
-                            input=raster,config=configfile,output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
-    if spatial_metric=='simpson':
-        filename=raster.split("@")[0]+"_simpson"
-        gscript.run_command('r.li.simpson', overwrite=True,
-                            input=raster,config=configfile,output=filename)
-        outputfile=os.path.join(os.path.split(configfile)[0],"output",filename)
-        return outputfile
+    else:
+        gscript.run_command('r.li.%s' %spatial_metric, overwrite=True,
+                    input=raster,config=configfile, output=filename)
+    return outputfile
     
 def get_landscapelevel_metrics(configfile, raster, returnlistresult=True, ncores=2):
     # Check if raster exists to avoid error in mutliprocessing 
