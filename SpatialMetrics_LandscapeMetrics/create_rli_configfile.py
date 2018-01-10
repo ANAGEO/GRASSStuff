@@ -57,8 +57,13 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     if not os.path.exists(rli_dir):
         os.makedirs(rli_dir)
     ## Create an ordered list with the 'cat' value of landscape units to be processed.
-    if uniqueid not in list(gscript.parse_command('db.columns', table=landscape_polygons)):
-        sys.exit('Column <%s> not found in vector layer <%s>' %(uniqueid,landscape_polygons))
+    try:
+        landscape_polygons_mapset=landscape_polygons.split("@")[1]
+    except:
+        landscape_polygons_mapset=list(gscript.parse_command('g.mapset', flags='p'))[0]
+    dbpath="$GISDBASE/$LOCATION_NAME/%s/sqlite/sqlite.db"%landscape_polygons_mapset
+    if uniqueid not in list(gscript.parse_command('db.columns', table=landscape_polygons.split("@")[0], database=dbpath)):
+        sys.exit('Column <%s> not found in vector layer <%s>' %(uniqueid,landscape_polygons.split("@")[0]))
     else:
         list_cat=[int(x) for x in gscript.parse_command('v.db.select', quiet=True, 
                                                         map=landscape_polygons, column=uniqueid, flags='c')]
