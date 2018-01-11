@@ -5,6 +5,7 @@
 # 'listoflandcoverraster' wait for a list with the name (string) of landcover rasters.
 # 'landscape_polygons' wait for the name (string) of the vector layer containing the polygons to be used as landscape units.
 # 'uniqueid' wait for the name of the 'landscape_polygons' layer's columns containing unique ID for each landscape unit polygon.
+# 'masklayerhardcopy' wait for a boolean value (True/False) depending if the user want to create hard copy of the landscape units mask layers or not.
 # 'returnlistpath' wait for a boolean value (True/False) according to the fact that a list containing the path to the configuration files is desired.
 # 'ncores' wait for a integer corresponding to the number of desired cores to be used for parallelization.
 
@@ -21,12 +22,13 @@ def copy_landscapeunitmasks(current_landcover_raster,base_landcover_raster,lands
     base_landscapeunit_rast=base_landcover_raster.split("@")[0]+"_"+landscape_polygons.split("@")[0]+"_"+str(cat)          
     # Copy the the landscape unit created for the first landcover map in order to match the name of the current landcover map
     gscript.run_command('g.copy', overwrite=True, quiet=True, raster=(base_landscapeunit_rast,current_landscapeunit_rast))
-    # Add the line to the maskedoverlayarea variable
-    maskedoverlayarea="MASKEDOVERLAYAREA "+current_landscapeunit_rast+"|"+landscapeunit_bbox[cat]
-    return maskedoverlayarea
+    # Add the line to the text variable
+    text="MASKEDOVERLAYAREA "+current_landscapeunit_rast+"|"+landscapeunit_bbox[cat]
+    return text
 
 # Function that create the r.li configuration file for the base landcover raster and then for all the binary rasters
-def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat',returnlistpath=True,ncores=2):
+def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat',
+                          masklayerhardcopy=False,returnlistpath=True,ncores=2):
     # Check if 'listoflandcoverraster' is not empty
     if len(listoflandcoverraster)==0:
         sys.exit("The list of landcover raster is empty and should contain at least one raster name")
@@ -73,7 +75,7 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     # Declare a empty list which will contain the path of the configation files created
     listpath=[]
     # Declare a empty string variable which will contains the core part of the r.li configuration file
-    maskedoverlayarea=""
+    maskedoverlayarea_1=""
     # Duplicate 'listoflandcoverraster' in a new variable called 'tmp_list'
     tmp_list=list(listoflandcoverraster)
     # Set the current landcover raster as the first of the list
@@ -82,7 +84,8 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     for cat in list_cat:
         # Extract the current landscape unit polygon as temporary vector
         tmp_vect="tmp_"+base_landcover_raster.split("@")[0]+"_"+landscape_polygons.split("@")[0]+"_"+str(cat)
-        gscript.run_command('v.extract', overwrite=True, quiet=True, input=landscape_polygons, cats=cat, output=tmp_vect)
+        gscript.run_command('v.extract', overwrite=True, quiet=True, 
+                            input=landscape_polygons, where='%s=%s'%(uniqueid,cat), output=tmp_vect)
         # Set region to match the extent of the current landscape polygon, with resolution and alignement matching the landcover raster
         gscript.run_command('g.region', vector=tmp_vect, align=base_landcover_raster)
         # Rasterize the landscape unit polygon
@@ -98,12 +101,12 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
         w=str(round(float(region_info['w']),6))
         # Save the coordinates of the bbox in the dictionary (n,s,e,w)
         landscapeunit_bbox[cat]=n+"|"+s+"|"+e+"|"+w
-        # Add the line to the maskedoverlayarea variable
-        maskedoverlayarea+="MASKEDOVERLAYAREA "+landscapeunit_rast+"|"+landscapeunit_bbox[cat]+"\n"
+        # Add the line to the maskedoverlayarea_1 variable
+        maskedoverlayarea_1+="MASKEDOVERLAYAREA "+landscapeunit_rast+"|"+landscapeunit_bbox[cat]+"\n"
 
     # Compile the content of the r.li configuration file
     config_file_content="SAMPLINGFRAME 0|0|1|1\n"
-    config_file_content+=maskedoverlayarea
+    config_file_content+=maskedoverlayarea_1
     config_file_content+="RASTERMAP "+base_landcover_raster+"\n"
     config_file_content+="VECTORMAP "+landscape_polygons+"\n"
 
@@ -117,21 +120,28 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     
     # Continue creation of r.li configuration file and landscape unit raster the rest of the landcover raster provided
     while len(tmp_list)>0:
-        # Reinitialize 'maskedoverlayarea' variable as an empty string
-        maskedoverlayarea=""
+        # Initialize 'maskedoverlayarea_2' variable as an empty string
+        maskedoverlayarea_2=""
         # Set the current landcover raster as the first of the list
         current_landcover_raster=tmp_list.pop(0) #The pop function return the first item of the list and delete it from the list at the same time
-        # Copy all the landscape units masks for the current landcover raster
-        p=Pool(ncores) #Create a pool of processes and launch them using 'map' function
-        func=partial(copy_landscapeunitmasks,current_landcover_raster,base_landcover_raster,landscape_polygons,landscapeunit_bbox) # Set fixed argument of the function
-        maskedoverlayarea=p.map(func,list_cat) # Launch the processes for as many items in the list and get the ordered results using map function
-        p.close()
-        p.join()
-        # Compile the content of the r.li configuration file
-        config_file_content="SAMPLINGFRAME 0|0|1|1\n"
-        config_file_content+="\n".join(maskedoverlayarea)+"\n"
-        config_file_content+="RASTERMAP "+current_landcover_raster+"\n"
-        config_file_content+="VECTORMAP "+landscape_polygons+"\n"
+        if masklayerhardcopy: # If the user asked for hard copy of the landscape units mask layers
+            # Copy all the landscape units masks for the current landcover raster
+            p=Pool(ncores) #Create a pool of processes and launch them using 'map' function
+            func=partial(copy_landscapeunitmasks,current_landcover_raster,base_landcover_raster,landscape_polygons,landscapeunit_bbox) # Set fixed argument of the function
+            maskedoverlayarea_2=p.map(func,list_cat) # Launch the processes for as many items in the list and get the ordered results using map function
+            p.close()
+            p.join()
+            # Compile the content of the r.li configuration file
+            config_file_content="SAMPLINGFRAME 0|0|1|1\n"
+            config_file_content+="\n".join(maskedoverlayarea_2)+"\n"
+            config_file_content+="RASTERMAP "+current_landcover_raster+"\n"
+            config_file_content+="VECTORMAP "+landscape_polygons+"\n"
+        else: # If the user not asked for hard copy
+            # Compile the content of the r.li configuration file
+            config_file_content="SAMPLINGFRAME 0|0|1|1\n"
+            config_file_content+=maskedoverlayarea_1  # If user do not asked for hard copy, the mask layers are the same than for the first configuration file
+            config_file_content+="RASTERMAP "+current_landcover_raster+"\n"  # But the name of the RASTERMAP should be the one of the current landcover raster
+            config_file_content+="VECTORMAP "+landscape_polygons+"\n"
         # Create a new file and save the content
         configfilename=current_landcover_raster.split("@")[0]+"_"+landscape_polygons.split("@")[0]
         path=os.path.join(rli_dir,configfilename)
