@@ -4,7 +4,6 @@
 ### So, the landscape unit layer if fixed and there are the landcover raster which change. 
 # 'listoflandcoverraster' wait for a list with the name (string) of landcover rasters.
 # 'landscape_polygons' wait for the name (string) of the vector layer containing the polygons to be used as landscape units.
-# 'uniqueid' wait for the name of the 'landscape_polygons' layer's columns containing unique ID for each landscape unit polygon.
 # 'masklayerhardcopy' wait for a boolean value (True/False) depending if the user want to create hard copy of the landscape units mask layers or not.
 # 'returnlistpath' wait for a boolean value (True/False) according to the fact that a list containing the path to the configuration files is desired.
 # 'ncores' wait for a integer corresponding to the number of desired cores to be used for parallelization.
@@ -27,7 +26,7 @@ def copy_landscapeunitmasks(current_landcover_raster,base_landcover_raster,lands
     return text
 
 # Function that create the r.li configuration file for the base landcover raster and then for all the binary rasters
-def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat',
+def create_rli_configfile(listoflandcoverraster,landscape_polygons,
                           masklayerhardcopy=False,returnlistpath=True,ncores=2):
     # Check if 'listoflandcoverraster' is not empty
     if len(listoflandcoverraster)==0:
@@ -59,17 +58,9 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     if not os.path.exists(rli_dir):
         os.makedirs(rli_dir)
     ## Create an ordered list with the 'cat' value of landscape units to be processed.
-    try:
-        landscape_polygons_mapset=landscape_polygons.split("@")[1]
-    except:
-        landscape_polygons_mapset=list(gscript.parse_command('g.mapset', flags='p'))[0]
-    dbpath="$GISDBASE/$LOCATION_NAME/%s/sqlite/sqlite.db"%landscape_polygons_mapset
-    if uniqueid not in list(gscript.parse_command('db.columns', table=landscape_polygons.split("@")[0], database=dbpath)):
-        sys.exit('Column <%s> not found in vector layer <%s>' %(uniqueid,landscape_polygons.split("@")[0]))
-    else:
-        list_cat=[int(x) for x in gscript.parse_command('v.db.select', quiet=True, 
-                                                        map=landscape_polygons, column=uniqueid, flags='c')]
-        list_cat.sort()
+    list_cat=[int(x) for x in gscript.parse_command('v.db.select', quiet=True, 
+                                                        map=landscape_polygons, column='cat', flags='c')]
+    list_cat.sort()
     # Declare a empty dictionnary which will contains the north, south, east, west values for each landscape unit
     landscapeunit_bbox={}
     # Declare a empty list which will contain the path of the configation files created
@@ -85,7 +76,7 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
         # Extract the current landscape unit polygon as temporary vector
         tmp_vect="tmp_"+base_landcover_raster.split("@")[0]+"_"+landscape_polygons.split("@")[0]+"_"+str(cat)
         gscript.run_command('v.extract', overwrite=True, quiet=True, 
-                            input=landscape_polygons, where='%s=%s'%(uniqueid,cat), output=tmp_vect)
+                            input=landscape_polygons, cats=cat, output=tmp_vect)
         # Set region to match the extent of the current landscape polygon, with resolution and alignement matching the landcover raster
         gscript.run_command('g.region', vector=tmp_vect, align=base_landcover_raster)
         # Rasterize the landscape unit polygon
@@ -152,4 +143,6 @@ def create_rli_configfile(listoflandcoverraster,landscape_polygons,uniqueid='cat
     
     # Return a list of path of configuration files creates if option actived
     if returnlistpath:
-        return listpath
+        return list_cat,listpath
+    else:
+        return list_cat
