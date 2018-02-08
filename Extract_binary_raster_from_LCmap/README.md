@@ -2,6 +2,7 @@
 
 This function creates a binary raster for each category of a base raster. The function run within the current region. If a category do not exists in the current region, no binary map will be produce.
 
+
 #### Parameters:
 - 'categorical_raster' wait for the name of the base raster to be used. It is the one from which one binary raster will be produced for each category value
 - 'prefix' wait for a string corresponding to the prefix of the name of the binary raster which will be produced
@@ -10,4 +11,4 @@ This function creates a binary raster for each category of a base raster. The fu
 - 'category_list' wait for a list of interger corresponding to specific category of the base raster to be used 
 
 #### TODOs:
-- DONE : Create a multiprocessed version as it could take long time if the computational region is very large
+- Add option enabling the user to choose between r.mapcalc (creation of the binary as a 'hard copy') or r.reclass (simple reclassify of the original layer, enabling saving hard drive space)
