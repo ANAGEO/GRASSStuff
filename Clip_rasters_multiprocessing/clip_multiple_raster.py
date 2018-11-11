@@ -6,6 +6,13 @@ from multiprocessing import Pool
 from functools import partial
 
 
+# Check if i.segment.stats is well installed
+if not gscript.find_program('r.clip', '--help'):
+	message = _("You first need to install the addon r.clip.\n")
+	message += _(" You can install the addon with 'g.extension r.clip'")
+	gscript.fatal(message)
+
+	
 def clip(name):
     """ Define a short function for the clip operation """
     global suffix, o, r
